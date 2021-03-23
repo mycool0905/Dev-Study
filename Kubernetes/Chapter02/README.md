@@ -100,6 +100,7 @@ ENTRYPOINT ["node", "app.js"]
 ```$ docker rm <container name>```
 
 - 추가 태그로 이미지 태그 지정, 도커 허브 ID로 지정
+
 ```$ docker tag kubia mycool0905/kubia```
 
 
