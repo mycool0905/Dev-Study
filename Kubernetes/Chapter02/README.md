@@ -59,8 +59,8 @@ ENTRYPOINT ["node", "app.js"]
 
  ### 컨테이너 이미지 생성
 
-```$ docker build -t kubia .```
-도커에게 현재 디렉터리의 콘텐츠를 기반으로 kubia라고 부르는 이미지를 빌드하라고 요청했다.
+- ```$ docker build -t kubia .```
+  + 도커에게 현재 디렉터리의 콘텐츠를 기반으로 kubia라고 부르는 이미지를 빌드하라고 요청했다.
 도커는 디렉터리 내 Dockerfile을 살펴보고 파일에 명시된 지시 사항에 근거해 이미지를 빌드한다.
 
 ![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/02fig02_alt.jpg)
@@ -72,9 +72,10 @@ ENTRYPOINT ["node", "app.js"]
 
 ### 컨테이너 이미지 실행
 
-```$ docker run --name kubia-container -p 8080:8080 -d kubia```
-도커가 `kubia` 이미지에서 `kubia-container`라는 이름의 새로운 컨테이너를 실행하도록 한다.
-컨테이너는 콘솔에서 분리돼(`-d` 플래그) 백그라운드에서 실행됨을 의미한다. 로컬 머신의 8080포트가 컨테이너 내부의 8080포트와 매핑되므로(`-p 8080:8080` 옵션) http://localhost:8080으로 애플리케이션에 접근할 수 있다.
+- ```$ docker run --name kubia-container -p 8080:8080 -d kubia```
+  + 도커가 `kubia` 이미지에서 `kubia-container`라는 이름의 새로운 컨테이너를 실행하도록 한다.
+  + 컨테이너는 콘솔에서 분리돼(`-d` 플래그) 백그라운드에서 실행됨을 의미한다.
+  + 로컬 머신의 8080포트가 컨테이너 내부의 8080포트와 매핑되므로(`-p 8080:8080` 옵션) http://localhost:8080으로 애플리케이션에 접근할 수 있다.
 
 맥이나 윈도우를 사용하는 경우에는 로컬 머신에서 도커 데몬이 실행 중이 아니다. 그래서 localhost 대신에 데몬이 실행 중인 가상머신의 호스트 이름이나 IP를 사용해야 한다. 이 정보는 `DOCKER_HOST` 환경변수로 확인 가능하다.
 
