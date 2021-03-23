@@ -80,27 +80,25 @@ ENTRYPOINT ["node", "app.js"]
 
 ### 도커 명령어들
 
-- 컨테이너의 기본 정보 표시
-```$ docker ps```
+- ```$ docker ps```
+  + 컨테이너의 기본 정보 표시
+  
+- ```$ docker inspect <container name>```
+  + 컨테이너의 상세 정보를 JSON 형식으로 출력
 
-- 컨테이너의 상세 정보를 JSON 형식으로 출력
-```$ docker inspect <container name>```
+- ```$ docker exec -it kubia-container bash```
+  + 실행중인 컨테이너 내부에서 셸 실행하기
+    * -i: 표준 입력(STDIN)을 오픈 상태로 유지한다. 셸에 명령어를 입력하기 위해 필요하다.
+    * -t: 의사(pseudo) 터미널(TTY)을 할당한다.
+  + 일반적인 셸을 사용하는 것과 동일하게 셸을 사용하고 싶다면 두 옵션이 필요하다.
 
-- 실행중인 컨테이너 내부에서 셸 실행하기
-  + -i: 표준 입력(STDIN)을 오픈 상태로 유지한다. 셸에 명령어를 입력하기 위해 필요하다.
-  + -t: 의사(pseudo) 터미널(TTY)을 할당한다.
+- ```$ docker stop <container name>```
+  + 실행중인 컨테이너 중지
 
-일반적인 셸을 사용하는 것과 동일하게 셸을 사용하고 싶다면 두 옵션이 필요하다.
-```$ docker exec -it kubia-container bash```
+- ```$ docker rm <container name>```
+  + 컨테이너 삭제
 
-- 실행중인 컨테이너 중지
-```$ docker stop <container name>```
-
-- 컨테이너 삭제
-```$ docker rm <container name>```
-
-- 추가 태그로 이미지 태그 지정, 도커 허브 ID로 지정
-
-```$ docker tag kubia mycool0905/kubia```
+- ```$ docker tag kubia mycool0905/kubia```
+  + 추가 태그로 이미지 태그 지정, 도커 허브 ID로 지정
 
 
