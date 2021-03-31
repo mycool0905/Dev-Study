@@ -153,7 +153,6 @@ spec:
 - ```$ kubectl create -f kubia-rc.yaml```
   + 해당 명령어로 ReplicationController 생성
   + 아래의 사진과 같이 파드들이 생성된다.
-
 ![image](https://user-images.githubusercontent.com/43199318/113114477-58327580-9246-11eb-801c-374b84754a66.png)
 
 - ```$ kubectl delete pod kubia-2f8ph```
@@ -165,7 +164,7 @@ spec:
 - ```$ kubectl get rc```
   + 레플리케이션 컨트롤러의 정보 알아보기
   + 아래의 그림과 같이 의도하는 파드 수, 실제 파드 수, 준비된 파드 수를 표시한다.
-![image](https://user-images.githubusercontent.com/43199318/113115162-19e98600-9247-11eb-816b-3e5b7639e8f0.png)
+  ![image](https://user-images.githubusercontent.com/43199318/113115162-19e98600-9247-11eb-816b-3e5b7639e8f0.png)
 
 
 - ```$ kubectl describe rc kubia```
@@ -188,7 +187,6 @@ spec:
   + 해당 파드에 `type=special` 레이블 추가
 - ```$ kubectl get po --show-labels```
   + 파드들의 레이블 보기
-
   ![image](https://user-images.githubusercontent.com/43199318/113117720-b3b23280-9249-11eb-87f7-588d4a8e02e4.png)
 
 - ```$ kubectl label pod kubia-47vjv app=foo --overwrite```
@@ -196,8 +194,7 @@ spec:
 
 - ```$ kubectl get po -L app```
   + app 레이블을 포함하여 파드들 표시
-
-![image](https://user-images.githubusercontent.com/43199318/113118060-0c81cb00-924a-11eb-80f6-c6e48a79fe7e.png)
+  ![image](https://user-images.githubusercontent.com/43199318/113118060-0c81cb00-924a-11eb-80f6-c6e48a79fe7e.png)
 
 여기서 보면 기존의 `kubia-47vjv`는 이제 관리 대상이 아니어서 제외되고 새로운 파드가 생성되는 중이다. 아래의 그림과 같다.
 
