@@ -152,22 +152,19 @@ spec:
 
 - ```$ kubectl create -f kubia-rc.yaml```
   + 해당 명령어로 ReplicationController 생성
-  
-아래와 같이 파드들이 생성된다.
- ![image](https://user-images.githubusercontent.com/43199318/113114477-58327580-9246-11eb-801c-374b84754a66.png)
+  + 아래의 사진과 같이 파드들이 생성된다.
 
+![image](https://user-images.githubusercontent.com/43199318/113114477-58327580-9246-11eb-801c-374b84754a66.png)
 
 - ```$ kubectl delete pod kubia-2f8ph```
   + 해당 명령어로 ReplicationController가 관리하는 파드 하나 삭제하기
-
-그러면 아래와 같이 원래 있던 파드 하나가 사라지고 새로운 파드가 생성된다.
+  + 아래의 사진과 같이 원래 있던 파드 하나가 사라지고 새로운 파드가 생성된다.
 ![image](https://user-images.githubusercontent.com/43199318/113114959-dee75280-9246-11eb-989c-d83a5947029c.png)
 
 
 - ```$ kubectl get rc```
   + 레플리케이션 컨트롤러의 정보 알아보기
-
-아래와 같이 의도하는 파드 수, 실제 파드 수, 준비된 파드 수를 표시한다.
+  + 아래의 그림과 같이 의도하는 파드 수, 실제 파드 수, 준비된 파드 수를 표시한다.
 ![image](https://user-images.githubusercontent.com/43199318/113115162-19e98600-9247-11eb-816b-3e5b7639e8f0.png)
 
 
