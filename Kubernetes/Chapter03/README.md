@@ -55,16 +55,16 @@
 
 #### kubia-manual.yaml
 ```yaml
-apiVersion: v1                  // 디스크립터는 쿠버네티스 API 버전 v1을 준수한다.
-kind: Pod                       // 오브젝트 종류는 파드
+apiVersion: v1                  # 디스크립터는 쿠버네티스 API 버전 v1을 준수한다.
+kind: Pod                       # 오브젝트 종류는 파드
 metadata:                       
-  name: kubia-manual            // 파드 이름
+  name: kubia-manual            # 파드 이름
 spec:
   containers:
-  - image: mycool0905/kubia     // 컨테이너를 만드는 컨테이너 이미지
-    name: kubia                 // 컨테이너 이름
+  - image: mycool0905/kubia     # 컨테이너를 만드는 컨테이너 이미지
+    name: kubia                 # 컨테이너 이름
     ports:
-    - containerPort: 8080       // 애플리케이션이 수신하는 포트
+    - containerPort: 8080       # 애플리케이션이 수신하는 포트
       protocol: TCP
 ```
 
@@ -124,7 +124,7 @@ kind: Pod
 metadata:
   name: kubia-manual-v2
   labels:
-    creation_method: manual         // 레이블 두 개를 파드에 붙였다.
+    creation_method: manual         # 레이블 두 개를 파드에 붙였다.
     env: prod
 spec:
   containers:
@@ -185,9 +185,9 @@ kind: Pod
 metadata:
   name: kubia-gpu
 spec:
-  nodeSelector:                 // nodeSelector는 쿠버네티스에
-    gpu: "true"                 // gpu=true 레이블을 포함한 노드에
-  containers:                   // 이 파드를 배포하도록 지시한다.
+  nodeSelector:                 # nodeSelector는 쿠버네티스에
+    gpu: "true"                 # gpu=true 레이블을 포함한 노드에
+  containers:                   # 이 파드를 배포하도록 지시한다.
   - image: mycool0905/kubia
     name: kubia
 ```
