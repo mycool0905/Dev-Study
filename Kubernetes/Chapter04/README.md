@@ -91,7 +91,7 @@ __`레플리케이션컨트롤러`는 쿠버네티스 리소스로서 파드가 
 위 그림은 파드가 두 개 있는 노드가 다운될 때 어떤 일이 일어나는지 보여준다. 파드 A는 직접해 관리되지 않는 파드인 반면, 파드 B는 레플리케이션컨트롤러에 의해 관리된다. 노드에 장애가 발생한 후 레플리케이션컨트롤러는 사라진 파드 B를 교체하기 위해 새 파드(Pod B2)를 생성하지만 파드 A는 완전히 유실된다.
 
 
-### 레플리케이션컨트롤러의 동작
+### 레플리케이션컨트롤러의 동작 이해
 
 레플리케이션컨트롤러는 실행 중인 파드 목록을 지속적으로 모니터링하고, 특정 유형(type)의 실제 파드 수가 의도하는 수와 일치하는지 항상 확인한다. 이런 파드가 너무 적게 실행 중인 경우 파드 템플릿에서 새 복제본을 만든다. 너무 많은 파드가 실행 중이면 초과 복제본이 제거된다.
 
@@ -127,8 +127,8 @@ __`레플리케이션컨트롤러`는 쿠버네티스 리소스로서 파드가 
 - 수동 또는 자동으로 파드를 쉽게 수평으로 확장할 수 있게 한다.
 
 
-#### 레플리케이션컨트롤러 생성
-
+### 레플리케이션컨트롤러 생성
+#### kubia-rc.yaml
 ``` yaml
 apiVersion: v1
 kind: ReplicationController         # 레플리케이션컨트롤러(RC)의 매니페스트 정의
@@ -149,3 +149,77 @@ spec:
         ports:
         - containerPort: 8080
 ```
+
+- ```$ kubectl create -f kubia-rc.yaml```
+  + 해당 명령어로 ReplicationController 생성
+  
+아래와 같이 파드들이 생성된다.
+ ![image](https://user-images.githubusercontent.com/43199318/113114477-58327580-9246-11eb-801c-374b84754a66.png)
+
+
+- ```$ kubectl delete pod kubia-2f8ph```
+  + 해당 명령어로 ReplicationController가 관리하는 파드 하나 삭제하기
+
+그러면 아래와 같이 원래 있던 파드 하나가 사라지고 새로운 파드가 생성된다.
+![image](https://user-images.githubusercontent.com/43199318/113114959-dee75280-9246-11eb-989c-d83a5947029c.png)
+
+
+- ```$ kubectl get rc```
+  + 레플리케이션 컨트롤러의 정보 알아보기
+
+아래와 같이 의도하는 파드 수, 실제 파드 수, 준비된 파드 수를 표시한다.
+![image](https://user-images.githubusercontent.com/43199318/113115162-19e98600-9247-11eb-816b-3e5b7639e8f0.png)
+
+
+- ```$ kubectl describe rc kubia```
+  + 레플리케이션컨트롤러의 상세한 정보 살펴보기
+
+#### 컨트롤러가 새로운 파드를 생성한 원인
+
+![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig04_alt.jpg)
+
+삭제하는 행동 그 자체에 대한 대응이 아니라 결과적인 상태(부족한 파드 수)에 대응하는 것이다. 레플리케이션컨트롤러는 삭제되는 파드에 대해 즉시 통지를 받지만(API 서버는 클라이언트가 리소스 및 리소스 목록의 변경을 감시할 수 있도록 허용한다), 이 통지 자체가 대체 파드를 생성하게 하는 것은 아니다. 이 통지는 컨트롤러가 실제 파드 수를 확인하고, 적절한 조치를 취하도록 하는 트리거 역할을 한다.
+
+멀티 노드에서 실행했을 때, 어느 노드가 장애가 발생하면 해당 노드에 있는 파드들의 상태는 `NotReady` > `Unknown` 상태가 되며, RC는 이 때 새로운 파드를 생성한다. 그리고 장애가 발생했던 노드가 다시 살아나면 `Unknown` 상태의 파드들을 삭제한다.
+
+
+### 레플리케이션컨트롤러에서 레이블
+
+위에서 나왔지만, 레플리케이션컨트롤러는 레이블 셀렉터와 일치하는 파드만을 관리한다. 파드의 레이블만 조작하면 RC의 관리 대상에서 제외시키고 또 다른 RC의 관리 대상으로 보낼 수도 있다.
+
+- ```$ kubectl label pod kubia-47vjv type=special```
+  + 해당 파드에 `type=special` 레이블 추가
+- ```$ kubectl get po --show-labels```
+  + 파드들의 레이블 보기
+
+  ![image](https://user-images.githubusercontent.com/43199318/113117720-b3b23280-9249-11eb-87f7-588d4a8e02e4.png)
+
+- ```$ kubectl label pod kubia-47vjv app=foo --overwrite```
+  + 해당 파드의 레이블을 `app=foo`로 변경하기. --overwrite 인수가 있어야 기존의 레이블 값을 변경할 수 있다.
+
+- ```$ kubectl get po -L app```
+  + app 레이블을 포함하여 파드들 표시
+
+![image](https://user-images.githubusercontent.com/43199318/113118060-0c81cb00-924a-11eb-80f6-c6e48a79fe7e.png)
+
+여기서 보면 기존의 `kubia-47vjv`는 이제 관리 대상이 아니어서 제외되고 새로운 파드가 생성되는 중이다. 아래의 그림과 같다.
+
+![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig05_alt.jpg)
+
+- ```$ kubectl edit rc kubia```
+  + RC kubia의 매니페스트를 수정하여 재정의 할 수 있다.
+  + 레이블 셀렉터를 변경하면 새로 변경된 레이블 셀렉터를 바라보는 파드들이 생성된다.
+  + 파드 템플릿을 변경하면 새로 생성되는 파드들에만 영향을 준다(아래 그림 참고).
+
+![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig06_alt.jpg)
+
+- ```$ kubectl scale rc kubia --replicas=10```
+  + 레플리케이션 리소스의 `replicas` 필드 값을 변경하며 수평적으로 파드 스케일링을 진행한다.
+  + 당연히 현존하는 값보다 적어지면 줄이고, 커지면 늘린다.
+  + ```$ kubectl edit rc kubia``` 이 명령어로도 변경 가능하다.
+
+- ```$ kubectel delete rc kubia```
+  + RC를 삭제하고 해당 RC가 관리하던 파드들도 삭제한다.
+  + `--cascade=false` 옵션을 추가하면 파드들은 삭제되지 않는다(아래 그림 참고).
+
+![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig07_alt.jpg)
