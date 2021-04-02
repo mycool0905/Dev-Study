@@ -217,3 +217,254 @@ spec:
   + `--cascade=false` 옵션을 추가하면 파드들은 삭제되지 않는다(아래 그림 참고).
 
 ![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig07_alt.jpg)
+
+
+### 레플리카셋
+
+초기에는 레플리케이션컨트롤러가 파드를 복제하고 노드 장애가 발생했을 때 재스케줄링하는 유일한 쿠버네티스 구성 요소였다. 후에 `레플리카셋(ReplicaSet)`이라는 유사한 리소스가 도입됐다. 상위 수준의 리소스인 `디플로이먼트(Deployment)`를 생성할 때 자동으로 생성되게 한다.
+
+
+#### 레플리카셋과 레플리케이션컨트롤러 비교
+
+- 레이블
+  + 레플리케이션컨트롤러: 레플리케이션컨트롤러의 레이블 셀렉터는 특정 레이블이 있는 파드만을 매칭시킬 수 있다. 
+  + 레플리카셋: 레플리카셋의 셀렉터는 특정 레이블이 없는 파드나 레이블의 값과 상관없이 특정 레이블의 키를 갖는 파드를 매칭시킬 수 있다. 
+  + 예시) 레플리케이션컨트롤러는 각 레이블이 `env=production`인 파드와 `env=devel`인 파드를 동시에 매칭시킬 수 없다. 그러나 레플리카셋은 하나의 레플리카셋으로 두 파드 세트를 모두 매칭시켜 하나의 그룹으로 취급할 수 있다.
+  + 예시) 레플리케이션컨트롤러는 값에 상관없이 레이블 키의 존재만으로 파드를 매칭시킬 수 없지만, 레플리카셋은 가능하다. 레플리카셋은 실제 값이 무엇이든 `env` 키가 있는 레이블을 갖는 모든 파드를 매칭시킬 수 있다(`env=*`로 생각할 수 있다).
+
+### 레플리카셋 생성
+#### kubia-replicaset.yaml
+``` yaml
+apiVersion: apps/v1beta2          # 레플리카셋은 API 그룹 apps, 버전 v1beta2에 속한다.
+kind: ReplicaSet
+metadata:
+  name: kubia
+spec:
+  replicas: 3
+  selector:
+    matchLabels:                  # 레플리케이션컨트롤러와 유사한 간단한 matchLabels 셀렉터를 사용한다.
+      app: kubia
+  template:                       # 템플릿은 레플리케이션컨트롤러와 동일하다.
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      containers:
+      - name: kubia
+        image: mycool0905/kubia
+```
+
+- ```$ kubectl create -f kubia-replicaset.yaml```
+  + 레플리카셋 생성
+- ```$ kubectl get rs```
+- ```$ kubectl describe rs kubia```
+  + 생성된 레플리카셋 검사(레플리케이션컨트롤러와 유사하게 출력된다.)
+  ![image](https://user-images.githubusercontent.com/43199318/113383409-d44fc900-93be-11eb-9c37-fc4ecb2b06a8.png)
+- ```$ kubectl delete rs kubia```
+  + 레플리카셋 삭제
+
+### 레플리카셋의 표현적인 레이블 셀렉터 사용
+#### kubia-resplicaset-matchexpressions.yaml
+``` yaml
+selector:
+  matchExpressions:
+    - key: app                      # 이 셀렉터는 파드의 키가 "app"인 레이블을 포함해야 한다.
+      operator: In
+      values:                       # 레이블의 값은 "kubia"여야 한다.
+      - kubia
+```
+
+- `In`: 레이블의 값이 지정된 값 중 하나와 일치해야 한다.
+- `NotIn`: 레이블의 값이 지정된 값과 일치하지 않아야 한다.
+- `Exists`: 파드는 지정된 키를 가진 레이블이 포함돼야 한다(값은 중요하지 않음). 이 연산자를 사용할 때는 `value` 필드를 지정하지 않아야 한다.
+- `DoesNotExist`: 파드에 지정된 키를 가진 레이블이 포함돼 있지 않아야 한다. 값 필드를 지정하지 않아야 한다.
+
+여러 표현식을 지정하는 경우 셀렉터가 파드와 매칭되기 위해서는, 모든 표현식이 `true`여야 한다. `matchLabels`와 `matchExpressions`를 모두 지정하면, 셀렉터가 파드를 매칭하기 위해서는, 모든 레이블이 일치하고, 모든 표현식이 `true`로 평가돼야 한다.
+
+
+### 데몬셋
+
+레플리케이션컨트롤러와 레플리카셋은 쿠버네티스 클러스터 내 어딘가에 지정된 수만큼의 파드를 실행하는 데 사용된다. 그러나 클러스터의 모든 노드에, 노드당 하나의 파드만 실행되길 원하는 경우(아래의 그림과 같이)가 있을 수 있다. 대개 시스템 수준의 작업을 수행하는 인프라 관련 파드가 이런 경우다(모든 노드에서 로그 수집기와 리소스 모니터를 실행하려는 경우, 쿠버네티스의 `kube-proxy` 프로세스 이는 서비스를 작동시키기 위해 모든 노드에서 실행돼야 한다).
+
+![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig08_alt.jpg)
+
+쿠버네티스를 사용하지 않는 환경에서는 일반적으로 노드가 부팅되는 동안에 `시스템 초기화 스크립트(init script)` 또는 `systemd 데몬`을 통해 시작된다. 쿠버네티스 노드에서도 이처럼 시스템 프로세스를 실행할 수도 있지만, 그렇게 하면 쿠버네티스가 제공하는 모든 기능을 최대한 활용할 수가 없다.
+
+#### 데몬셋이란
+
+모든 클러스터 노드마다 파드를 하나만 실행하려면 `데몬셋(DaemonSet)` 오브젝트를 생성해야 한다. 데몬셋에 의해 생성되는 파드는 타깃 노드가 이미 지정돼 있고 쿠버네티스 스케줄러를 건너뛰는 것을 제외하면 이 오브젝트는 레플리케이션컨트롤러 또는 레플리카셋과 매우 유사하다. 대신 클러스터 내에 무작위로 흩어져 배포되는 것이 아니라, 위의 그림처럼 노드 수만큼 파드를 만들고 각 노드에 배포된다.
+
+또한, `복제본 수(replicas)` 라는 개념이 없고, 노드의 수에 따라 생성된다. 새 노드가 클러스터에 추가되면 데몬셋은 즉시 새 파드 인스턴스를 새 노드에 배포한다.
+
+파드가 노드의 일부에서만 실행되도록 지정하지 않으면 데몬셋은 클러스터의 모든 노드에 파드를 배포한다. 그래서 데몬셋을 사용해 특정 노드에서만 파드를 실행하게 하려면 데몬셋 정의의 일부인 파드 템플릿에서 `node-Selector` 속성을 지정하면 된다.
+
+#### ssd-monitor-daemonset.yaml
+``` yaml
+apiVersion: apps/v1beta2                # 데몬셋은 API 그룹 apps의 v1beta2 버전에 있다.
+kind: DaemonSet
+metadata:
+  name: ssd-monitor
+spec:
+  selector:
+    matchLabels:
+      app: ssd-monitor
+  template:
+    metadata:
+      labels:
+        app: ssd-monitor
+    spec:
+      nodeSelector:                      # 파드 템플릿은 disk=ssd 레이블이 있는 노드를 선택하는 노드 셀렉터를 갖는다.
+        disk: ssd
+      containers:
+      - name: main
+        image: luksa/ssd-monitor
+```
+
+
+- ```$ kubectl create -f ssd-monitor-daemonset.yaml```
+  + 데몬셋 생성
+- ```$ kubectl get ds```
+  + 데몬셋 검색
+  ![image](https://user-images.githubusercontent.com/43199318/113385127-745b2180-93c2-11eb-9ebe-cf5aff3b3762.png)
+
+위에서 0이 나온 이유는 아직 노드에 레이블을 달지 않았기 때문이다. (노드에 레이블 추가하는 실습은 하지 않겠다.)
+- ```$ kubectl delete ds ssd-monitor```
+  + 데몬셋 삭제
+
+
+### 잡(Job) 리소스
+
+지금까지는 지속적으로 실행돼야 하는 파드에 관해서만 이야기했다. 그러나 완료 가능한 태스크에 대해서는 프로스세가 종료된 후에 다시 시작되지 않는다. 이를 쿠버네티스 `잡(Job)` 리소스라고 하는데, 다른 리소스와 유사 하지만 `잡(Job)`은 파드의 컨테이너 내부에서 실행 중인 프로세스가 성공적으로 완료되면 컨테이너를 다시 시작하지 않는 파드를 실행할 수 있다. 일단 그렇게 되면 파드는 완료된 것으로 간주된다. 노드에 장애가 발생한 경우 해당 노드에 있던 잡이 관리하는 파드는 레플리카셋 파드와 같은 방식으로 다른 노드로 다시 스케줄링된다. 프로세스 자체에 장애가 발생한 경우, `잡(Job)`에서 컨테이너를 다시 시작할 것인지 설정할 수 있다. 아래의 그림은 초기에 스케줄링된 노드에 장애가 발생했을 때 `잡(Job)`에 의해 생성된 파드를 새 노드로 다시 스케줄링하는 방법을 보여준다. 또한 관리되지 않는 파드(다시 스케줄링되지 않음)와 레플리카셋이 관리하는 파드를 보여준다.
+
+![image](https://drek4537l1klr.cloudfront.net/luksa/Figures/04fig10_alt.jpg)
+
+
+`잡(Job)`은 작업이 제대로 완료되는 것이 중요한 임시 작업에 유용하다. 관리되지 않은 파드에서 작업을 실행하고 완료될 때까지 기다릴 수 있지만 작업이 수행되는 동안 노드에 장애가 발생하거나 파드가 노드에서 제거되는 경우 수동으로 다시 생성해야 한다. 특히 잡을 완료하는 데 몇 시간이 걸리는 경우 이 작업을 수동으로 수행한다는 것은 말이 안되는 일이다. 예를 들면 배치 작업이 있다.
+
+
+### 잡(Job) 리소스 생성
+#### exporter.yaml
+``` yaml
+apiVersion: batch/v1                    # 잡은 batch API 그룹, v1버전에 속한다.
+kind: Job
+metadata:
+  name: batch-job
+spec:                                   # 파드 셀렉터를 지정하지 않았다.
+  template:                             # (파드 템플릿의 레이블을 기반으로 만들어진다.)
+    metadata:
+      labels:
+        app: batch-job
+    spec:
+      restartPolicy: OnFailure          # 잡은 기본 재시작 정책(Always)을 사용할 수 없다.
+      containers:
+      - name: main
+        image: luksa/batch-job
+```
+
+- ```$ kubectl create -f exporter.yaml```
+  + 잡 리소스 생성
+- ```$ kubectl get jobs```
+  + 잡 리소스 검색
+  ![image](https://user-images.githubusercontent.com/43199318/113386313-f3e9f000-93c4-11eb-9a0c-e705ee4ad9f9.png)
+- ```$ kubectl get po```
+  + 생성된 잡 리소스 확인
+  ![image](https://user-images.githubusercontent.com/43199318/113386493-55aa5a00-93c5-11eb-9f67-a2327d841b8c.png)
+- ```$ kubectl get po```
+  + 2분후 완료된 잡 리소스 확인
+  ![image](https://user-images.githubusercontent.com/43199318/113386669-b174e300-93c5-11eb-895d-708aeba0b795.png)
+- ```$ kubectl logs batch-job-mtwtt```
+  + 해당 잡 리소스의 파드 로그 확인
+  ![image](https://user-images.githubusercontent.com/43199318/113386770-e719cc00-93c5-11eb-9a7b-4fe7a10fc84d.png)
+- ```$ kubectl get job```
+  + 잡 리소스 검색
+  ![image](https://user-images.githubusercontent.com/43199318/113386813-fef15000-93c5-11eb-9516-55933562c5e9.png)
+
+
+이 때, 잡에서 여러 파드 인스턴스를 생성해 병렬 또는 순차적으로 실행할 수 있다. 잡 스펙에 `completions`와 `parallelism` 속성을 설정해 수행한다.
+
+#### multi-completion-parallel-batch-job.yaml
+``` yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multi-completion-batch-job
+spec:
+  completions: 5                        # 이 잡은 다섯 개의 파드를 성공적으로 완료해야 한다.
+  parallelism: 2                        # 두 개까지 병렬로 실행할 수 있다.
+  template:
+    metadata:
+      labels:
+        app: batch-job
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: main
+        image: luksa/batch-job
+```
+
+- ```$ kubectl create -f multi-completion-batch-job.yaml```
+  + 잡 리소스 생성
+- ```$ kubectl get po```
+  + 파드 검색
+  + `parallelism`을 2로 설정해서 2개가 동시에 생성되는 것을 볼 수 있다.
+  + ![image](https://user-images.githubusercontent.com/43199318/113387356-21379d80-93c7-11eb-8fd2-0511d0be7ad6.png)
+- ```$ kubectl scale job multi-completion-batch-job --replicas 3```
+  + 잡이 실행되는 동안 잡의 `parallelism` 속성을 3으로 변경
+  + 하나의 파드가 추가되는 것을 볼 수 있다.
+  + ![image](https://user-images.githubusercontent.com/43199318/113387477-59d77700-93c7-11eb-82f9-1aa323dd04ba.png)
+- ```$ kubectl get jobs```
+  + 잡 리소스 검색
+  + 5개의 파드가 완료된 것을 확인할 수 있다.
+  + ![image](https://user-images.githubusercontent.com/43199318/113387649-b2a70f80-93c7-11eb-8c86-0c27d4d4625a.png)
+
+파드 스펙에 `activeDeadlineSeconds` 속성을 설정하면 파드의 실행 시간을 제한할 수 있다. 파드가 이보다 오래 실행되면 시스템이 종료를 시도하고 잡을 실패한 것으로 표시한다.
+
+잡의 매니페스트에서 `spec.backoffLimit` 필드를 지정해 실패한 것으로 표시되기 전에 잡을 재시도할 수 있는 횟수를 설정할 수 있다. 명시적으로 지정하지 않으면 기본값은 6이다.
+
+
+### 크론잡(CronJob)
+
+잡 리소스를 생성하면 즉시 해당하는 파드를 실행한다. 그러나 많은 배치 잡이 미래의 특정 시간 또는 지정된 간격으로 반복 실행해야 한다. 이런 작업을 `크론(cron)` 작업이라고 하고 쿠버네티스에서는 이를 `크론잡(CronJob)` 리소스를 만들어서 구성한다.
+
+
+### 크론잡 리소스 생성
+#### cronjob.yaml
+``` yaml
+apiVersion: batch/v1beta2
+kind: CronJob
+metadata:
+  name: batch-job-every-fifteen-minutes
+spec:
+  schedule: "0,15,30,45 * * * *"          # 이 잡은 매일, 매시간 0, 15, 30, 45분에 실행해야 한다.
+  startingDeadlineSeconds: 15
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: periodic-batch-job
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: main
+            image: luksa/batch-job
+```
+
+- `스케줄(schedule)` 설정하기(크론 스케줄 형식)
+  + 5개를 순서대로 적으면 된다.
+  + 분
+  + 시
+  + 일
+  + 월
+  + 요일 (0: 일, 1: 월, 2: 화, 3: 수, 4: 목, 5: 금, 6: 토)
+  + 예) 매월 매일 매시 30분에 실행: 30 * * * *
+  + 예) 일요일 오후 3시마다 실행: 0 15 * * 0
+
+- `startingDeadlineSeconds` 설정하기
+  + 잡이나 파드가 예정된 시간을 초과해서 시작돼서는 안 된다는 엄격한 요구사항 설정
+  + 위에서 15로 설정했으므로, 해당 크론 스케줄 시각부터 15초 이내로 시작하지 않으면 실패로 표시
+
+
+
+## 마무리
+슬슬 양이 많아지네, 일단 10단원까지는 기본개념이니까 열심히 달려보자.
