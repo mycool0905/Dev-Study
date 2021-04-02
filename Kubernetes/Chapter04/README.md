@@ -164,7 +164,7 @@ spec:
 - ```$ kubectl get rc```
   + 레플리케이션 컨트롤러의 정보 알아보기
   + 아래의 그림과 같이 의도하는 파드 수, 실제 파드 수, 준비된 파드 수를 표시한다.
-  ![image](https://user-images.githubusercontent.com/43199318/113115162-19e98600-9247-11eb-816b-3e5b7639e8f0.png)
+![image](https://user-images.githubusercontent.com/43199318/113115162-19e98600-9247-11eb-816b-3e5b7639e8f0.png)
 
 
 - ```$ kubectl describe rc kubia```
@@ -187,14 +187,14 @@ spec:
   + 해당 파드에 `type=special` 레이블 추가
 - ```$ kubectl get po --show-labels```
   + 파드들의 레이블 보기
-  ![image](https://user-images.githubusercontent.com/43199318/113117720-b3b23280-9249-11eb-87f7-588d4a8e02e4.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113117720-b3b23280-9249-11eb-87f7-588d4a8e02e4.png)
 
 - ```$ kubectl label pod kubia-47vjv app=foo --overwrite```
   + 해당 파드의 레이블을 `app=foo`로 변경하기. --overwrite 인수가 있어야 기존의 레이블 값을 변경할 수 있다.
 
 - ```$ kubectl get po -L app```
   + app 레이블을 포함하여 파드들 표시
-  ![image](https://user-images.githubusercontent.com/43199318/113118060-0c81cb00-924a-11eb-80f6-c6e48a79fe7e.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113118060-0c81cb00-924a-11eb-80f6-c6e48a79fe7e.png)
 
 여기서 보면 기존의 `kubia-47vjv`는 이제 관리 대상이 아니어서 제외되고 새로운 파드가 생성되는 중이다. 아래의 그림과 같다.
 
@@ -259,7 +259,7 @@ spec:
 - ```$ kubectl get rs```
 - ```$ kubectl describe rs kubia```
   + 생성된 레플리카셋 검사(레플리케이션컨트롤러와 유사하게 출력된다.)
-  ![image](https://user-images.githubusercontent.com/43199318/113383409-d44fc900-93be-11eb-9c37-fc4ecb2b06a8.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113383409-d44fc900-93be-11eb-9c37-fc4ecb2b06a8.png)
 - ```$ kubectl delete rs kubia```
   + 레플리카셋 삭제
 
@@ -325,7 +325,7 @@ spec:
   + 데몬셋 생성
 - ```$ kubectl get ds```
   + 데몬셋 검색
-  ![image](https://user-images.githubusercontent.com/43199318/113385127-745b2180-93c2-11eb-9ebe-cf5aff3b3762.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113385127-745b2180-93c2-11eb-9ebe-cf5aff3b3762.png)
 
 위에서 0이 나온 이유는 아직 노드에 레이블을 달지 않았기 때문이다. (노드에 레이블 추가하는 실습은 하지 않겠다.)
 - ```$ kubectl delete ds ssd-monitor```
@@ -365,19 +365,19 @@ spec:                                   # 파드 셀렉터를 지정하지 않�
   + 잡 리소스 생성
 - ```$ kubectl get jobs```
   + 잡 리소스 검색
-  ![image](https://user-images.githubusercontent.com/43199318/113386313-f3e9f000-93c4-11eb-9a0c-e705ee4ad9f9.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113386313-f3e9f000-93c4-11eb-9a0c-e705ee4ad9f9.png)
 - ```$ kubectl get po```
   + 생성된 잡 리소스 확인
-  ![image](https://user-images.githubusercontent.com/43199318/113386493-55aa5a00-93c5-11eb-9f67-a2327d841b8c.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113386493-55aa5a00-93c5-11eb-9f67-a2327d841b8c.png)
 - ```$ kubectl get po```
   + 2분후 완료된 잡 리소스 확인
-  ![image](https://user-images.githubusercontent.com/43199318/113386669-b174e300-93c5-11eb-895d-708aeba0b795.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113386669-b174e300-93c5-11eb-895d-708aeba0b795.png)
 - ```$ kubectl logs batch-job-mtwtt```
   + 해당 잡 리소스의 파드 로그 확인
-  ![image](https://user-images.githubusercontent.com/43199318/113386770-e719cc00-93c5-11eb-9a7b-4fe7a10fc84d.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113386770-e719cc00-93c5-11eb-9a7b-4fe7a10fc84d.png)
 - ```$ kubectl get job```
   + 잡 리소스 검색
-  ![image](https://user-images.githubusercontent.com/43199318/113386813-fef15000-93c5-11eb-9516-55933562c5e9.png)
+  + ![image](https://user-images.githubusercontent.com/43199318/113386813-fef15000-93c5-11eb-9516-55933562c5e9.png)
 
 
 이 때, 잡에서 여러 파드 인스턴스를 생성해 병렬 또는 순차적으로 실행할 수 있다. 잡 스펙에 `completions`와 `parallelism` 속성을 설정해 수행한다.
